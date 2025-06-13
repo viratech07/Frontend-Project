@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  title: Legal Services Portal API
+  description: API documentation for the Legal Services Portal application
+  version: 1.0.0
+  contact:
+    name: Legal Services Team
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+tags:
+  - name: Legal Services
+    description: Operations about legal services
+  - name: Documents
+    description: Operations about document uploads
+
+components:
+  schemas:
+    LegalService:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - price
+        - duration
+        - category
+        - requirements
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+          description: Unique identifier for the legal service
+        name:
+          type: string
+          example: "Contract Review"
+          description: Name of the legal service
+        description:
+          type: string
+          example: "Professional review and analysis of legal contracts"
+          description: Detailed description of the service
+        price:
+          type: number
+          format: float
+          example: 299.99
+          description: Price of the service in USD
+        duration:
+          type: string
+          example: "3-5 business days"
+          description: Expected duration of service completion
+        category:
+          type: string
+          example: "Business Law"
+          description: Category of the legal service
+        requirements:
+          type: array
+          items:
+            type: string
+          example: ["Original contract document", "Company registration details"]
+          description: List of required documents
+    
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    
+    UploadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+paths:
+  /legal-services:
+    get:
+      tags:
+        - Legal Services
+      summary: Get all legal services
+      description: Returns a list of all available legal services
+      operationId: getServices
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LegalService'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /legal-services/{id}:
+    get:
+      tags:
+        - Legal Services
+      summary: Get legal service by ID
+      description: Returns a single legal service by ID
+      operationId: getServiceById
+      parameters:
+        - name: id
+          in: path
+          description: ID of legal service to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegalService'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /legal-services/{id}/documents:
+    post:
+      tags:
+        - Documents
+      summary: Upload documents for a legal service
+      description: Upload required documents for a specific legal service
+      operationId: uploadDocuments
+      parameters:
+        - name: id
+          in: path
+          description: ID of legal service to upload documents for
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                documents:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Documents to upload
+                productId:
+                  type: integer
+                  format: int64
+                  description: ID of the legal service
+      responses:
+        '200':
+          description: Documents uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Invalid input (file type/size)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error' 
